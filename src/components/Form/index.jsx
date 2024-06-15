@@ -40,7 +40,6 @@ export default function Form({ opened, close }) {
                 if (value.trim() === '') return null; // Optional field
                 const currentYear = new Date().getFullYear();
                 if (!/^\d{4}$/.test(value) || Number(value) > currentYear || Number(value) < 1800) {
-                    console.log('public year', value)
                     return 'Year need to greater than 1800 and smaller than current year';
                 }
                 return null;
@@ -50,7 +49,6 @@ export default function Form({ opened, close }) {
                 const isbn10 = /^(?:\d[\ |-]?){9}[\d|X]$/i;
                 const isbn13 = /^(?:\d[\ |-]?){13}$/i;
                 if (!isbn10.test(value) && !isbn13.test(value)) {
-                    console.log('public year', value)
                     return 'Please enter a valid ISBN (ISBN-10 or ISBN-13)';
                 }
                 return null;
@@ -76,11 +74,9 @@ export default function Form({ opened, close }) {
 
             if (!querySnapshot.empty) {
                 // Document already exists
-                console.log('querySnapshot', querySnapshot)
                 addNotification({ id: uuidv4(), type: 'error', description: 'Document already exists!' });
                 return;
             }
-
 
             const docRef = await addDoc(collection(db, "book",), req)
             // form.onReset();

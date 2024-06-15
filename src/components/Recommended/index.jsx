@@ -5,31 +5,11 @@ import { Group, Select } from "@mantine/core";
 import { db } from "../../config/firebase";
 import { getBookFilterYear } from "../../api/book";
 
-
-/*
-The system should be able to recommend a good book to the user:
-a. A good book should be published at least 3 years ago or earlier; - publication_year now.year() - date.year() > 3
-b. From all these books you should pick ones with the highest rating; - rating highest
-c. If there are several good books matching the criteria - pick one at random;
-*/
-
-// add year to show the recommend book by year
 function getScreenSize() {
     var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
     var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
     return { width: width, height: height };
 }
-
-// function handleResize() {
-//     var screenSize = getScreenSize();
-//     console.log('Width:', screenSize.width, 'Height:', screenSize.height);
-//     // Add your responsive logic here
-// }
-
-// window.addEventListener('resize', handleResize);
-
-// Initial call to set up the current screen size
-// handleResize();
 
 export default function Recommended() {
     const [books, setBooks] = useState([]);

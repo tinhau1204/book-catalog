@@ -22,7 +22,6 @@ export default function BookCard({ book }) {
                 );
                 const querySnapshot = await getDocs(q);
 
-                console.log('check querySnapShot', querySnapshot)
 
                 if (!querySnapshot.empty) {
                     // Document exists, so get its reference and delete it
