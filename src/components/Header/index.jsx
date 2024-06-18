@@ -7,11 +7,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { CiMail, CiUser } from "react-icons/ci";
 import { useDisclosure, useLocalStorage } from '@mantine/hooks'
 import Form from "../Form";
+import { useEffect } from "react";
 export default function Header({ isAuth, setIsAuth, profile, setProfile }) {
     const [opened, { open, close }] = useDisclosure(false);
-    const [user, setUser, removeUser] = useLocalStorage({key: 'user', defaultValue: {}})
+    const [user, setUser] = useLocalStorage({ key: 'user', defaultValue: {} })
     const { addNotification } = useNotification();
-    
+
+    useEffect(() => {
+        if (Object.keys(user).length === 0) {
+            setIsAuth(false)
+            setProfile({})
+        } else {
+            setIsAuth(true)
+            setProfile(JSON.parse(user))
+        }
+    }, [user, setIsAuth, setProfile])
 
     const handleAuthentication = async () => {
 
@@ -20,7 +30,7 @@ export default function Header({ isAuth, setIsAuth, profile, setProfile }) {
         try {
             const result = await signInWithPopup(auth, provider)
             const user = result?.user;
-            
+
             setIsAuth(true);
             setProfile(user?.providerData[0]);
             setUser(JSON.stringify(user?.providerData[0]))
@@ -38,7 +48,7 @@ export default function Header({ isAuth, setIsAuth, profile, setProfile }) {
 
             setIsAuth(false);
             setProfile({});
-            removeUser()
+            setUser({})
             addNotification({ id: uuidv4(), type: 'success', description: 'User logout successfully!' })
         } catch (e) {
             console.error(e)
@@ -47,8 +57,8 @@ export default function Header({ isAuth, setIsAuth, profile, setProfile }) {
     }
 
     const handleCreate = () => {
-        if (isAuth) {
-            open(); 
+        if (isAuth && Object.keys(user).length !== 0) {
+            open();
         } else {
             addNotification({ id: uuidv4(), type: 'error', description: 'You need to login with Google first!' })
         }
@@ -78,7 +88,8 @@ export default function Header({ isAuth, setIsAuth, profile, setProfile }) {
                 </Button>
 
                 {
-                    isAuth ?
+                    isAuth && profile ?
+
                         <Menu>
                             <Menu.Target>
                                 <Avatar
@@ -86,6 +97,7 @@ export default function Header({ isAuth, setIsAuth, profile, setProfile }) {
                                     radius="xl"
                                     src={profile?.photoURL || ""}
                                 />
+
                             </Menu.Target>
                             <Menu.Dropdown>
                                 <Menu.Label>
