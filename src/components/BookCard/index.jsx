@@ -9,7 +9,7 @@ import { readLocalStorageValue } from "@mantine/hooks";
 export default function BookCard({ book }) {
     const { addNotification } = useNotification();
     const user = readLocalStorageValue({ key: 'user' })
-    const userStore = user ? JSON.parse(user) : {}
+    const userStore = Object.keys(user).length !== 0 ? true : false
     
     async function handleDelete() {
 
