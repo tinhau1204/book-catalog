@@ -9,8 +9,9 @@ import { readLocalStorageValue } from '@mantine/hooks';
 
 function App() {
   const user = readLocalStorageValue({key: 'user'})
-  const userStore = user ? JSON.parse(user) : {}
-  const [isAuth, setIsAuth] = useState(user ? true : false);
+
+  const userStore = Object.keys(user).length !== 0 ? JSON.parse(user) : {}
+  const [isAuth, setIsAuth] = useState(Object.keys(userStore).length !== 0 ? true : false);
   const [profile, setProfile] = useState(userStore);
   return (
     <React.Fragment>
