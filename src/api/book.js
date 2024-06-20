@@ -1,12 +1,47 @@
-import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { collection, getDocs, query} from "firebase/firestore";
 
-export async function getBookFilterYear(db, year) {
+const findHighestRatedBooks = (books) => {
+    let maxRating = -1
+    let highestRatedBookList = []
+    if (books.length === 0) {
+        return []
+    }
+    for (const book of books) {
+        if (book.rating && book.rating > maxRating) {
+            maxRating = book.rating
+            highestRatedBookList = [book]
+        } else if (book.rating && book.rating === maxRating) {
+            highestRatedBookList.push(book)
+        }
+    }
+    return highestRatedBookList
+}
+
+export async function getRecommendBook(db) {
     let currentYear = new Date().getFullYear();
     const bookCol = collection(db, "book");
-    const bookQuery = query(bookCol, where("publication_year", "<", (currentYear - 3)) && (year && where("publication_year", "==", year)), orderBy("publication_year", "desc"), orderBy("rating", "desc"))
-    const bookSnapshot = (await getDocs(bookQuery));
+    const bookSnapshot = (await getDocs(bookCol));
     const bookList = bookSnapshot.docs.map(doc => doc.data());
-    return bookList
+
+    const ratedBookList = bookList.filter((book) => book.rating)
+    
+    const recentBookList = ratedBookList.filter(
+        (book) => (book.publication_year) && (currentYear - book.publication_year) >= 3,
+    )
+    let highestRatedBookList = []
+
+    highestRatedBookList = findHighestRatedBooks(recentBookList)
+
+    if (highestRatedBookList.length === 0 && ratedBookList.length > 0) {
+        highestRatedBookList = findHighestRatedBooks(ratedBookList)
+    }
+
+    if (highestRatedBookList.length === 0) {
+        return bookList[Math.floor(Math.random() * bookList.length)]
+    }
+
+    return highestRatedBookList[Math.floor(Math.random() * highestRatedBookList.length)]
+
 }
 
 export async function getAllBook(db) {
@@ -15,7 +50,6 @@ export async function getAllBook(db) {
     const bookSnapshot = (await getDocs(bookQuery));
     const bookList = bookSnapshot.docs.map(doc => doc.data());
 
-    // Separate books with and without publication year
     const booksWithYear = [];
     const booksWithoutYear = [];
 
@@ -37,28 +71,23 @@ export async function getAllBook(db) {
         return acc;
     }, {});
 
-    // Convert the grouped books into an array and sort by publication year in descending order
     const sortedBooksByYear = Object.keys(booksByYear)
-        .sort((a, b) => b - a)  // Sort years in descending order
+        .sort((a, b) => b - a)
         .map(year => {
             return {
                 year,
-                books: booksByYear[year].sort((a, b) => a.name.localeCompare(b.name))  // Sort books alphabetically by title
+                books: booksByYear[year].sort((a, b) => a.name.localeCompare(b.name)) //sorted alphabetically
             };
         });
 
-    // Sort books without publication year alphabetically
     booksWithoutYear.sort((a, b) => a.name.localeCompare(b.name));
 
-    // Append books without publication year at the end
     if (booksWithoutYear.length > 0) {
         sortedBooksByYear.push({
-            year: 'Unknown Year',
+            year: '',
             books: booksWithoutYear
         });
     }
 
     return sortedBooksByYear;
-
-    //return bookList
 }
