@@ -5,12 +5,13 @@ import { collection, deleteDoc, doc, getDocs, query, where } from "firebase/fire
 import { db } from "../../config/firebase";
 import { v4 as uuidv4 } from 'uuid';
 import { readLocalStorageValue } from "@mantine/hooks";
+import useBookStore from "../../config/bookStore";
 
 export default function BookCard({ book }) {
     const { addNotification } = useNotification();
     const user = readLocalStorageValue({ key: 'user' })
-    const userStore = Object.keys(user).length !== 0 ? true : false
-    
+    const userStore = user && Object.keys(user).length > 0 ? true : false
+    const deleteBook = useBookStore((state) => state.deleteBook)
     async function handleDelete() {
 
         if (userStore) {
@@ -18,7 +19,7 @@ export default function BookCard({ book }) {
                 // Create a query to check if the document already exists
                 const q = query(
                     collection(db, "book"),
-                    where("name", "==", book.name) // Assuming 'name' is a unique field to check
+                    where("name", "==", book.name)
                 );
                 const querySnapshot = await getDocs(q);
 
@@ -28,6 +29,7 @@ export default function BookCard({ book }) {
                     querySnapshot.forEach(async (docSnapshot) => {
                         const docRef = doc(db, "book", docSnapshot.id);
                         await deleteDoc(docRef);
+                        deleteBook(book.name)
                         addNotification({ id: uuidv4(), type: 'success', description: 'Delete Successfully' });
                     });
 
@@ -69,7 +71,6 @@ export default function BookCard({ book }) {
             </CardSection>
 
             <Stack justify="space-between" className="text-start" mt="md" mb="xs">
-                {/* book name */}
                 <Text fw={500} className="min-h-14 max-h-fit text-sm lg:text-base min-w-[278px]">{book.name}</Text>
                 {
                     book.publication_year ?
@@ -82,13 +83,19 @@ export default function BookCard({ book }) {
                             <Badge color="gray">N/A</Badge>
                         </Group>
                 }
-                {/* publication_year: 2011 */}
             </Stack>
-            {/* list_of_authors and rating*/}
-            <Group justify="space-between" className="text-start">
+            <Group justify="space-between" className="text-start min-h-11">
                 <Text size="sm" c="dark">
-                    <span className="font-semibold">Author:</span>
-                    {book.list_of_authors?.map((author) => ` ${author}, `)}
+                    <span className="font-semibold ">Author:</span>
+                    {book.list_of_authors?.map((author, index, array) => {
+                        if (index === array.length - 1) { //last author and only 1 author
+                            return ` ${author}`;
+                        } else if (index === array.length - 2) {
+                            return ` ${author}, `;
+                        } else {
+                            return ` ${author}, `;
+                        }
+                    })}
                 </Text>
                 {book.rating &&
                     <Text size="sm" className={`${book.rating > 7 ? 'text-green-600' : 'text-red-600'}`}>
@@ -97,7 +104,6 @@ export default function BookCard({ book }) {
 
                 }
             </Group>
-            {/* ISBN */}
             {book.ISBN ? (
                 <Text size="sm" c="dimmed" className="text-start mt-2">
                     <span className="font-semibold">ISBN&nbsp;&nbsp;&nbsp;:</span> {book.ISBN}
@@ -108,7 +114,6 @@ export default function BookCard({ book }) {
                 </Text>
             )
             }
-
         </Card>
     );
 }
