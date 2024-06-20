@@ -1,12 +1,16 @@
-import { Grid } from "@mantine/core";
 import { getAllBook } from "../../api/book";
 import { db } from "../../config/firebase";
-import { useEffect, useState } from "react";
-import BookCard from "../BookCard";
+import { useEffect } from "react";
+import BookofEachYear from "./BookofEachYear";
+import useBookStore from "../../config/bookStore";
 
 
 export default function ListBook() {
-    const [books, setBooks] = useState([]);
+    const { books, setBooks } = useBookStore((state) => ({
+        books: state.books,
+        setBooks: state.setBooks
+    }))
+
     useEffect(() => {
         const fetchBooks = async () => {
             try {
@@ -17,22 +21,22 @@ export default function ListBook() {
             }
         };
         fetchBooks();
-    }, [books])
+    }, [setBooks])
 
     return (
         <div className="min-h-96 w-full bg-gray-200">
-            <h3>All Books We Have</h3>
-            <Grid>
-                {
-                    books?.map((book) => (
-                        book.books?.map((book, index) => (
-                            <Grid.Col key={index} span={{ base: 12,xs: 6, md: 4 }} className="[&>*]:mx-auto">
-                                <BookCard book={book} />
-                            </Grid.Col>
-                        ))
-                    ))
-                }
-            </Grid>
+            <h3>List of Book</h3>
+            {books ?
+                books.map((book) => (
+                    <BookofEachYear key={book.year} books={book} />
+                ))
+                :
+                <>
+                    <div>
+                        unable to load book
+                    </div>
+                </>
+            }
         </div>
     );
 }
