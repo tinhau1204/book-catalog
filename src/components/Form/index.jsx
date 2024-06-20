@@ -4,10 +4,11 @@ import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { useNotification } from "../Notification/NotificationContext";
 import { v4 as uuidv4 } from 'uuid';
+import useBookStore from "../../config/bookStore";
 
 export default function Form({ opened, close }) {
     const { addNotification } = useNotification();
-
+    const addBook = useBookStore((state) => state.addBook)
     const form = useForm({
         mode: 'controlled',
         initialValues: {
@@ -20,16 +21,13 @@ export default function Form({ opened, close }) {
         validate: {
             name: (value) => (/^\s*$/.test(value) ? 'Book name must not be empty' : null),
             list_of_authors: (value) => {
-                // Regex to check if the string contains at least one word (author)
-                const regex = /^\s*([a-zA-Z0-9]+(\s*,\s*[a-zA-Z0-9]+)*)\s*$/;
-                if (regex.test(value)) {
-                    return null;
-                } else {
-                    return 'List of authors must contain at least one word, separated by commas';
+                if (!value || value.trim().length === 0) {
+                    return 'List of authors is required';
                 }
+                return null;
             },
             rating: (value) => {
-                if (value.trim() === '') return null; // Optional field
+                if (value.trim() === '') return null;
                 const ratingNum = Number(value);
                 if (isNaN(ratingNum) || ratingNum < 0 || ratingNum > 10) {
                     return 'Rating must be a number between 0 and 10';
@@ -37,7 +35,7 @@ export default function Form({ opened, close }) {
                 return null;
             },
             publication_year: (value) => {
-                if (value.trim() === '') return null; // Optional field
+                if (value.trim() === '') return null;
                 const currentYear = new Date().getFullYear();
                 if (!/^\d{4}$/.test(value) || Number(value) > currentYear || Number(value) < 1800) {
                     return 'Year need to greater than 1800 and smaller than current year';
@@ -45,7 +43,7 @@ export default function Form({ opened, close }) {
                 return null;
             },
             ISBN: (value) => {
-                if (value.trim() === '') return null; // Optional field
+                if (value.trim() === '') return null;
                 const isbn10 = /^(?:\d[\ |-]?){9}[\d|X]$/i;
                 const isbn13 = /^(?:\d[\ |-]?){13}$/i;
                 if (!isbn10.test(value) && !isbn13.test(value)) {
@@ -66,10 +64,8 @@ export default function Form({ opened, close }) {
             // Create a query to check if the document already exists
             const q = query(
                 collection(db, "book"),
-                where("name", "==", req.name) // Assuming 'name' is a unique field to check
+                where("name", "==", req.name)
             );
-
-            // Execute the query
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
@@ -78,8 +74,8 @@ export default function Form({ opened, close }) {
                 return;
             }
 
-            const docRef = await addDoc(collection(db, "book",), req)
-            // form.onReset();
+            await addDoc(collection(db, "book",), req)
+            addBook(req)
             close();
             addNotification({ id: uuidv4(), type: 'success', description: 'Created Data Successfully!' })
 
