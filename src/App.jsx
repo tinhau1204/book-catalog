@@ -8,9 +8,16 @@ import ListBook from './components/ListBook';
 import { readLocalStorageValue } from '@mantine/hooks';
 
 function App() {
-  const user = readLocalStorageValue({key: 'user'})
 
-  const userStore = Object.keys(user).length !== 0 ? JSON.parse(user) : {}
+  const user = readLocalStorageValue({ key: 'user' })
+  let userStore = {};
+  if (user) {
+    try {
+      userStore = JSON.parse(user);
+    } catch (e) {
+      console.error('Invalid JSON in localStorage for key "user":', user);
+    }
+  }
   const [isAuth, setIsAuth] = useState(Object.keys(userStore).length !== 0 ? true : false);
   const [profile, setProfile] = useState(userStore);
   return (
